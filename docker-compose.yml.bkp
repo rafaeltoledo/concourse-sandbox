@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  concourse-db:
+    image: postgres:9.5
+    environment:
+      POSTGRES_DB: concourse
+      POSTGRES_PASSWORD: concourse_pass
+      POSTGRES_USER: concourse_user
+      PGDATA: /database
+
+  concourse-web:
+    image: concourse/concourse:3.14.1
+    links: [concourse-db]
+    command: web
+    ports: ["8080:8080","2222:2222"]
+    volumes: ["./keys/web:/concourse-keys"]
+    environment:
+      CONCOURSE_POSTGRES_DATA_SOURCE: |-
+        postgres://concourse_user:concourse_pass@concourse-db:5432/concourse?sslmode=disable
+      #- CONCOURSE_POSTGRES_HOST=concourse-db
+      #- CONCOURSE_POSTGRES_USER=concourse_user
+      #- CONCOURSE_POSTGRES_PASSWORD=concourse_pass
+      #- CONCOURSE_POSTGRES_DATABASE=concourse
+      CONCOURSE_NO_REALLY_I_DONT_WANT_ANY_AUTH: "true"
+      CONCOURSE_LOG_DB_QUERIES: "true"
+
+#  concourse-worker:
+#    build: .
+#    command: worker
+#    privileged: true
+#    links:
+#      - concourse-web
+#    depends_on:
+#      - concourse-web
+#    volumes: ["./keys/worker:/concourse-keys"]
+#    environment:
+#      - CONCOURSE_TSA_HOST=concourse-web:2222
+#      - CONCOURSE_GARDEN_NETWORK

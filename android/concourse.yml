@@ -1,0 +1,32 @@
+resources:
+  - name: app-repository
+    type: git
+    source:
+      uri: https://github.com/rafaeltoledo/concourse-sandbox.git
+      branch: master
+
+jobs:
+  - name: build
+    plan:
+      - get: app-repository
+        trigger: true
+      - task: lint
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: circleci/android
+              tag: api-27-alpha
+          inputs:
+            - name: app-repository
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                sudo chown -R $(id -un) app-repository
+                cd app-repository/android
+                ./gradlew check --stacktrace
+                ./gradlew assembleDebug --stacktrace                
+        
